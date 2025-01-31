@@ -1,56 +1,60 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three'; // Import THREE for type definitions
-import { OrbitControls } from '@react-three/drei';
-
-const RotatingCube = () => {
-  const cubeRef = useRef<THREE.Mesh>(null); // Explicitly type the ref as THREE.Mesh
-
-  // Rotate the cube on every frame
-  useFrame(() => {
-    if (cubeRef.current) {
-      cubeRef.current.rotation.x += 0.01;
-      cubeRef.current.rotation.y += 0.01;
-    }
-  });
-
-  return (
-    <mesh ref={cubeRef} position={[0, 0, 0]} castShadow>
-      {/* Cube Geometry */}
-      <boxGeometry args={[1, 1, 1]} />
-      {/* Material */}
-      <meshStandardMaterial
-        color="black"
-        roughness={0.4} // Controls the reflectiveness (lower = shinier)
-        metalness={0.5} // Gives the material a metallic appearance
-      />
-    </mesh>
-  );
-};
+import  { useState } from "react";
+import Scene from "./components/Scene";
+import ConfiguratorWindow from "./components/Configurateur/ConfiguratorWindow";
+import { RiSettings3Fill } from "react-icons/ri";
+import Layout from "./layout";
+import "./index.css";
+import store from './store';
+import { Provider } from 'react-redux';
 
 const App = () => {
+  const [lastStepId, setLastStepId] = useState(1);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const handleStepChange = (stepId: number) => {
+    setLastStepId(stepId); // Update the last step reached
+  };
+
+  const handleSelectionsChange = (selections: any) => {
+    // Handle changes in selections here
+    console.log("Selections changed:", selections);
+  };
+
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+  };
+
   return (
-    <Canvas
-      shadows
-      style={{ height: '100vh', background: '#ffffff' }}
-      camera={{ position: [3, 3, 3], fov: 50 }}
-    >
-      {/* Lighting */}
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[-2, 5, 2]} intensity={0.5} castShadow />
+    <>
+     <Layout>
+  
+      <Scene />
+      <div className="fixed flex flex-col gap-4 top-[3%] left-[3%] max-lg:top-[0] w-[30%] h-[80%] max-lg:w-full max-lg:h-full max-lg:left-1/2 max-lg:transform max-lg:-translate-x-1/2 max-lg:justify-between bg-blend-overlay inset-0 pointer-events-none">
+        <div className="mt-4 flex gap-[5%] justify-center items-center pointer-events-auto">
+          <button
+            className="w-[50px] h-[50px] border-none cursor-pointer flex items-center justify-center bg-cbutton shadow-[0_2px_6px_rgba(0,0,0,0.952)] rounded-full transition-shadow hover:bg-cwhite focus:bg-cwhite"
+            onClick={toggleMenu}
+          >
+            <RiSettings3Fill size={34} />
+          </button>
+          <h2 className="flex items-center text-2xl max-2xl:text-xl max-xl:text-base max-lg:text-base max-md:text-sm w-fit h-full uppercase font-semibold">
+            Configurer mon volet
+          </h2>
+        </div>
 
-      {/* Ground */}
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
-        <planeGeometry args={[10, 10]} />
-        <shadowMaterial opacity={0.3} />
-      </mesh>
-
-      {/* Cube */}
-      <RotatingCube />
-
-      {/* Controls */}
-      <OrbitControls />
-    </Canvas>
+        {/* Conditionally render the Configurator window */}
+        {menuVisible && (
+           <Provider store={store}>
+          <ConfiguratorWindow
+            onSelectionsChange={handleSelectionsChange}
+            initialStep={lastStepId}
+            onStepChange={handleStepChange}
+          />
+          </Provider>
+        )}
+      </div>
+      </Layout>
+    </>
   );
 };
 

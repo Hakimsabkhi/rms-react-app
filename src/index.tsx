@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App'; // Assuming your main component is in App.js
+import App from './App';
 
 // Find the root DOM node
 const container = document.getElementById('root');

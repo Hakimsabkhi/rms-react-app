@@ -67,7 +67,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 ### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minif
 
+$ npx gltfjsx public/models/RideauMetallique/text.gltf --shadows --exportdefault --output src/assets/Text.tsx
 
-npx gltfjsx public/models/RideauMetallique/text.gltf --exportdefault --output src/assets/Text.tsx
+$ npx gltfjsx public/3Dmodel/model.gltf --exportdefault --shadows --types --output src/assets/model.tsx
