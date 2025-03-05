@@ -70,4 +70,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 $ npx gltfjsx public/models/RideauMetallique/text.gltf --shadows --exportdefault --output src/assets/Text.tsx
 
-$ npx gltfjsx public/3Dmodel/model.gltf --exportdefault --shadows --types --output src/assets/model.tsx
+$ npx gltfjsx public/3Dmodel/model.gltf --exportdefault --shadows --types --output src/assets/model2.tsx

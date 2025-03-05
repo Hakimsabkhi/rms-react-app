@@ -1,112 +1,84 @@
 import React, { useState, useEffect, useCallback } from "react";
-import StepsConfigurator from "./StepsConfigurator";
-import StepsComponentHandler from "./StepsComponentHandler";
-import StepNavigationButtons from "./StepNavigationButtons";
-import WarningPopup from "../WarningPopup";
-import { reset } from "../../store/rideauSlice";
 import { useDispatch } from "react-redux";
-
+import { reset } from "../../store/rideauSlice";
+import { StepsData } from "../../assets/data";
+import WarningPopup from "../WarningPopup";
+import StepsNavigation from "./StepsNavigation";
+import StepNavigationButtons from "./StepNavigationButtons";
+import StepRenderer from "./StepRenderer"; 
 
 interface ConfiguratorWindowProps {
-  initialStep: number; // Initial step passed from parent
-  onStepChange?: (stepId: number) => void; // Optional callback
-  onSelectionsChange?: (selections: any) => void; // <== Add or uncomment this line!
-  // ...other props if needed
+  initialStep: number;
+  onStepChange?: (stepId: number) => void;
 }
 
-interface EnabledSteps {
-  [key: number]: boolean;
-}
-
-const ConfiguratorMenu: React.FC<ConfiguratorWindowProps> = ({
-  initialStep,
-  onStepChange,
-}) => {
+const ConfiguratorWindow: React.FC<ConfiguratorWindowProps> = ({ initialStep, onStepChange}) => {
+  const dispatch = useDispatch();
   const [currentStepId, setCurrentStepId] = useState(initialStep);
-  const [enabledSteps, setEnabledSteps] = useState<EnabledSteps>({ 1: true });
-  const [stepTitle, setStepTitle] = useState("");
+  const [enabledSteps, setEnabledSteps] = useState<{ [key: number]: boolean }>({ 1: true });
+  const [isNextButtonEnabled, setIsNextButtonEnabled] = useState(false);
   const [showWarningPopup, setShowWarningPopup] = useState(false);
   const [showInformation, setShowInformation] = useState(false);
 
-  const dispatch = useDispatch(); 
-
-    // Handle "Créer Nouvelle Devis" which resets the slice and goes to the first step
-    const handleCreateNewDevis = () => {
-      dispatch(reset()); 
-      setCurrentStepId(1); 
-      setShowInformation(false); 
-    };
-
-  // Track "Next" button state for the current step
-  const [isNextButtonEnabled, setIsNextButtonEnabled] = useState(false);
-
-    // Reset to the first step and hide information (for modify button)
-    const modifyProduct = () => {
-      setCurrentStepId(1);
-      setShowInformation(false);
-    };
-
-  const enableNextButton = useCallback(
-    (isEnabled: boolean) => {
-      setIsNextButtonEnabled(isEnabled);
-      // Dynamically enable the next step if needed
-      setEnabledSteps((prev) => ({
-        ...prev,
-        [currentStepId + 1]: isEnabled,
-      }));
-    },
-    [currentStepId]
-  );
-
-  // Update the current step if the parent changes "initialStep"
   useEffect(() => {
     setCurrentStepId(initialStep);
   }, [initialStep]);
 
-  // Move to the previous step if possible
-  const previousStep = () => {
-    if (currentStepId > 1) {
-      setCurrentStepId((prev) => prev - 1);
-    }
-  };
-
-  // Move to the next step if allowed, otherwise show the warning popup
-  const nextStep = () => {
-    if (isNextButtonEnabled && currentStepId < 5) {
-      setCurrentStepId((prev) => prev + 1);
-    } else {
-      setShowWarningPopup(true); // Show the warning popup if Next button is disabled
-    }
-  };
-
-  // Optional: Notify parent whenever the step changes
   useEffect(() => {
     if (onStepChange) {
       onStepChange(currentStepId);
     }
   }, [currentStepId, onStepChange]);
 
+  const enableNextButton = useCallback(
+    (isEnabled: boolean, selections?: any) => {
+      setIsNextButtonEnabled(isEnabled);
+      setEnabledSteps((prev) => ({ ...prev, [currentStepId + 1]: isEnabled }));
+
+  
+    },
+    [currentStepId]
+  );
+
+  const handleCreateNewDevis = () => {
+    dispatch(reset());
+    setCurrentStepId(1);
+  };
+
+  const previousStep = () => {
+    if (currentStepId > 1) setCurrentStepId((prev) => prev - 1);
+  };
+
+  const nextStep = () => {
+    if (isNextButtonEnabled && currentStepId < StepsData.length) {
+      setCurrentStepId((prev) => prev + 1);
+    } else {
+      setShowWarningPopup(true);
+    }
+  };
+
+  const modifyProduct = () => {
+    setCurrentStepId(1);
+    setShowInformation(false);
+  };
+
   return (
     <div className="flex flex-col max-lg:absolute max-lg:bottom-0 max-lg:left-0 p-4 max-lg:w-full pointer-events-auto">
-      {/* Step navigation */}
-      <StepsConfigurator
-        currentStepId={currentStepId}
-        setCurrentStepId={setCurrentStepId}
-        enabledSteps={enabledSteps}
-        onStepTitleChange={setStepTitle}
-      />
+      {/* Steps Navigation */}
+      <StepsNavigation currentStepId={currentStepId} setCurrentStepId={setCurrentStepId} enabledSteps={enabledSteps} />
 
-      {/* Step content handler */}
-      <StepsComponentHandler
-        currentStepId={currentStepId}
-        stepTitle={stepTitle}
-        enableNextButton={enableNextButton}
-      />
+      {/* Step Content */}
+      <div className="flex flex-col bg-primary p-[10px] max-md:min-h-[10px] rounded-t-[16px] gap-2">
+        <h1 className="font-bold text-center uppercase text-xl max-xl:text-xs max-lg:text-sm text-cText">
+          {StepsData.find((step) => step.id === currentStepId)?.title}
+        </h1>
+        <StepRenderer currentStepId={currentStepId} enableNextButton={enableNextButton} /> {/* ✅ Uses new component */}
+      </div>
 
-      {/* Navigation buttons */}
+      {/* Navigation Buttons */}
       <StepNavigationButtons
         currentStepId={currentStepId}
-        stepsLength={5}
+        stepsLength={StepsData.length}
         previousStep={previousStep}
         nextStep={nextStep}
         modifyProduct={modifyProduct}
@@ -115,7 +87,7 @@ const ConfiguratorMenu: React.FC<ConfiguratorWindowProps> = ({
         resetToFirstStep={handleCreateNewDevis}
       />
 
-      {/* Warning popup */}
+      {/* Warning Popup */}
       {showWarningPopup && (
         <WarningPopup
           message="Encore des options doivent être sélectionnées avant de passer à l'étape suivante!"
@@ -126,4 +98,4 @@ const ConfiguratorMenu: React.FC<ConfiguratorWindowProps> = ({
   );
 };
 
-export default ConfiguratorMenu;
+export default ConfiguratorWindow;
